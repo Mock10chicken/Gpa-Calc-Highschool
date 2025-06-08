@@ -1,3 +1,16 @@
+function logVisit() {
+  const browser = encodeURIComponent(navigator.userAgent);
+  fetch("https://api.ipify.org?format=json")
+    .then(res => res.json())
+    .then(data => {
+      const ip = encodeURIComponent(data.ip);
+      const url = `https://script.google.com/macros/s/AKfycbySAjsx7i_ArjvqTFFd3-kZpgXt4s02pclPNQJC4Dz6KDAE9YofWAmJktApjDHXMYAo/exec
+?ip=${ip}&browser=${browser}`;
+      fetch(url);
+    });
+}
+
+logVisit();
 const setupForm = document.getElementById("setup-form");
 const gradesForm = document.getElementById("grades-form");
 const gradeInputs = document.getElementById("grade-inputs");
