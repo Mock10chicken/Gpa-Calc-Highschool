@@ -13,22 +13,24 @@ const gradePoints = {
 };
 
 const creditOptions = [0.5, 1, 1.5, 2];
-
-let courseCount = 0;
+let userName = "";
 
 function startForm() {
-  const name = document.getElementById("user-name").value.trim();
-  const count = parseInt(document.getElementById("course-count").value);
+  userName = document.getElementById("user-name").value.trim();
+  const courseCount = parseInt(document.getElementById("course-count").value);
 
-  if (!name || isNaN(count) || count <= 0) {
-    alert("Please enter a valid name and number of courses.");
+  if (!userName || isNaN(courseCount) || courseCount <= 0) {
+    alert("Please enter your name and a valid number of courses.");
     return;
   }
 
-  document.getElementById("form-section").style.display = "none";
-  document.getElementById("courses-section").style.display = "block";
+  document.getElementById("start-form").style.display = "none";
+  document.getElementById("course-input-section").style.display = "block";
 
-  courseCount = count;
+  generateCourseInputs(courseCount);
+}
+
+function generateCourseInputs(count) {
   const container = document.getElementById("courses-container");
   container.innerHTML = "";
 
@@ -41,7 +43,7 @@ function startForm() {
         ${creditOptions.map(c => `<option value="${c}">${c} credits</option>`).join("")}
       </select>
       <select class="course-grade">
-        ${Object.keys(gradePoints).map(grade => `<option value="${grade}">${grade}</option>`).join("")}
+        ${Object.keys(gradePoints).map(g => `<option value="${g}">${g}</option>`).join("")}
       </select>
       <hr>
     `;
@@ -50,17 +52,16 @@ function startForm() {
 }
 
 function calculateGPA() {
-  const name = document.getElementById("user-name").value.trim();
-  const names = Array.from(document.getElementsByClassName("course-name")).map(el => el.value.trim());
-  const credits = Array.from(document.getElementsByClassName("course-credits")).map(el => parseFloat(el.value));
-  const grades = Array.from(document.getElementsByClassName("course-grade")).map(el => el.value);
+  const courseNames = Array.from(document.getElementsByClassName("course-name")).map(el => el.value.trim());
+  const courseCredits = Array.from(document.getElementsByClassName("course-credits")).map(el => parseFloat(el.value));
+  const courseGrades = Array.from(document.getElementsByClassName("course-grade")).map(el => el.value);
 
   let totalPoints = 0;
   let totalCredits = 0;
 
-  for (let i = 0; i < courseCount; i++) {
-    const grade = grades[i];
-    const credit = credits[i];
+  for (let i = 0; i < courseNames.length; i++) {
+    const grade = courseGrades[i];
+    const credit = courseCredits[i];
     totalPoints += gradePoints[grade] * credit;
     totalCredits += credit;
   }
@@ -69,27 +70,27 @@ function calculateGPA() {
   const honorRoll = gpa >= 3.75;
 
   document.getElementById("gpa-result").innerHTML = `
-    <strong>${name}</strong>, your GPA is <strong>${gpa}</strong>.<br>
+    <strong>${userName}</strong>, your GPA is <strong>${gpa}</strong>.<br>
     ${honorRoll ? "🎉 You made the Honor Roll!" : ""}
   `;
 
   // Log to Google Sheets
-  const data = {
-    name,
-    gpa,
-    courses: names.map((course, i) => ({
-      name: course,
-      grade: grades[i],
-      credits: credits[i]
+  const payload = {
+    name: userName,
+    gpa: gpa,
+    courses: courseNames.map((name, i) => ({
+      name: name,
+      grade: courseGrades[i],
+      credits: courseCredits[i]
     }))
   };
 
-  fetch('https://script.google.com/macros/s/AKfycbySAjsx7i_ArjvqTFFd3-kZpgXt4s02pclPNQJC4Dz6KDAE9YofWAmJktApjDHXMYAo/exec
- {
-    method: 'POST',
-    body: JSON.stringify(data),
+  fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+    method: "POST",
+    body: JSON.stringify(payload),
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     }
   });
 }
+
