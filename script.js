@@ -1,4 +1,4 @@
-const gradePoints = {
+const gradeScale = {
   "A+": 4.33,
   "A": 4.00,
   "A-": 3.67,
@@ -9,88 +9,129 @@ const gradePoints = {
   "C": 2.00,
   "C-": 1.67,
   "D": 1.00,
-  "F": 0.00,
+  "F": 0.00
 };
 
-const creditOptions = [0.5, 1, 1.5, 2];
-let userName = "";
-
-function startForm() {
-  userName = document.getElementById("user-name").value.trim();
-  const courseCount = parseInt(document.getElementById("course-count").value);
-
-  if (!userName || isNaN(courseCount) || courseCount <= 0) {
-    alert("Please enter your name and a valid number of courses.");
+function startCourseInput() {
+  const username = document.getElementById("username").value.trim();
+  if (!username) {
+    alert("Please enter your name.");
     return;
   }
 
-  document.getElementById("start-form").style.display = "none";
-  document.getElementById("course-input-section").style.display = "block";
+  localStorage.setItem("username", username);
+  document.getElementById("form-section").classList.add("hidden");
+  document.getElementById("course-count-section").classList.remove("hidden");
 
-  generateCourseInputs(courseCount);
+  // Log visit
+  fetch("https://api.ipify.org?format=json")
+    .then(res => res.json())
+    .then(data => {
+      const ip = data.ip;
+      const browser = navigator.userAgent;
+      const timestamp = new Date().toISOString();
+
+      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: username,
+          ip: ip,
+          browser: browser,
+          time: timestamp,
+          type: "visit"
+        }),
+      });
+    });
 }
 
-function generateCourseInputs(count) {
-  const container = document.getElementById("courses-container");
-  container.innerHTML = "";
-
-  for (let i = 0; i < count; i++) {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <h4>Course ${i + 1}</h4>
-      <input type="text" placeholder="Course Name" class="course-name" required>
-      <select class="course-credits">
-        ${creditOptions.map(c => `<option value="${c}">${c} credits</option>`).join("")}
-      </select>
-      <select class="course-grade">
-        ${Object.keys(gradePoints).map(g => `<option value="${g}">${g}</option>`).join("")}
-      </select>
-      <hr>
-    `;
-    container.appendChild(div);
+function generateCourseFields() {
+  const courseCount = parseInt(document.getElementById("courseCount").value);
+  if (isNaN(courseCount) || courseCount < 1) {
+    alert("Please enter a valid number of courses.");
+    return;
   }
+
+  const form = document.getElementById("courses-form");
+  form.innerHTML = "";
+
+  for (let i = 0; i < courseCount; i++) {
+    form.innerHTML += `
+      <div>
+        <label>Course ${i + 1} Name:</label>
+        <input type="text" name="course${i}" required />
+
+        <label>Credits:</label>
+        <select name="credits${i}">
+          <option value="1">1</option>
+          <option value="0.5">0.5</option>
+          <option value="2">2</option>
+        </select>
+
+        <label>Grade:</label>
+        <select name="grade${i}">
+          ${Object.keys(gradeScale).map(g => `<option value="${g}">${g}</option>`).join("")}
+        </select>
+      </div>
+    `;
+  }
+
+  form.innerHTML += `<button type="button" onclick="calculateGPA(${courseCount})">Calculate GPA</button>`;
+  form.classList.remove("hidden");
 }
 
-function calculateGPA() {
-  const courseNames = Array.from(document.getElementsByClassName("course-name")).map(el => el.value.trim());
-  const courseCredits = Array.from(document.getElementsByClassName("course-credits")).map(el => parseFloat(el.value));
-  const courseGrades = Array.from(document.getElementsByClassName("course-grade")).map(el => el.value);
-
+function calculateGPA(courseCount) {
   let totalPoints = 0;
   let totalCredits = 0;
 
-  for (let i = 0; i < courseNames.length; i++) {
-    const grade = courseGrades[i];
-    const credit = courseCredits[i];
-    totalPoints += gradePoints[grade] * credit;
-    totalCredits += credit;
+  for (let i = 0; i < courseCount; i++) {
+    const credits = parseFloat(document.querySelector(`[name="credits${i}"]`).value);
+    const grade = document.querySelector(`[name="grade${i}"]`).value;
+    const points = gradeScale[grade];
+
+    totalPoints += credits * points;
+    totalCredits += credits;
   }
 
   const gpa = (totalPoints / totalCredits).toFixed(2);
-  const honorRoll = gpa >= 3.75;
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = `Your GPA is <strong>${gpa}</strong>`;
 
-  document.getElementById("gpa-result").innerHTML = `
-    <strong>${userName}</strong>, your GPA is <strong>${gpa}</strong>.<br>
-    ${honorRoll ? "🎉 You made the Honor Roll!" : ""}
-  `;
+  if (gpa >= 3.75) {
+    resultDiv.innerHTML += `<br><span style="color: gold; font-weight: bold;">You made Honor Roll!</span>`;
+  }
 
-  // Log to Google Sheets
-  const payload = {
-    name: userName,
-    gpa: gpa,
-    courses: courseNames.map((name, i) => ({
-      name: name,
-      grade: courseGrades[i],
-      credits: courseCredits[i]
-    }))
-  };
+  resultDiv.classList.remove("hidden");
 
-  fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
+  // Log GPA result
+  const username = localStorage.getItem("username");
+  const timestamp = new Date().toISOString();
+
+  fetch("https://api.ipify.org?format=json")
+    .then(res => res.json())
+    .then(data => {
+      const ip = data.ip;
+      const browser = navigator.userAgent;
+
+      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: username,
+          gpa: gpa,
+          ip: ip,
+          browser: browser,
+          time: timestamp,
+          type: "result"
+        }),
+      });
+    });
 }
+
 
