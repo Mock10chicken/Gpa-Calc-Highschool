@@ -1,33 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GPA Calculator</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GPA Calculator</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div class="container">
-        <h1>GPA Calculator</h1>
-        <div id="userNameInput" class="input-section">
-            <label for="userName">Enter your name:</label>
-            <input type="text" id="userName" name="userName" placeholder="Your name" />
-            <button id="startBtn">Start</button>
-        </div>
-        <div id="courseCountInput" class="input-section" style="display:none;">
-            <label for="courseCount">How many courses do you have?</label>
-            <input type="number" id="courseCount" min="1" max="20" />
-            <button id="courseCountBtn">Next</button>
-        </div>
-        <form id="coursesForm" style="display:none;">
-            <div id="coursesContainer"></div>
-            <button type="submit">Calculate GPA</button>
-        </form>
-        <div id="result" class="result"></div>
-        <div id="footer" class="footer">
-            <small>Made by Noah Kornman | Based off of Isidore Newman Highschool grading system</small>
-        </div>
+  <div class="container">
+    <h1>GPA Calculator</h1>
+    <div id="form-section">
+      <label for="username">Enter your name:</label>
+      <input type="text" id="username" required />
+      <button onclick="startCourseInput()">Start</button>
     </div>
-    <script src="script.js"></script>
+
+    <div id="course-count-section" class="hidden">
+      <label for="courseCount">How many courses?</label>
+      <input type="number" id="courseCount" min="1" />
+      <button onclick="generateCourseFields()">Next</button>
+    </div>
+
+    <form id="courses-form" class="hidden"></form>
+
+    <div id="result" class="hidden"></div>
+  </div>
+
+  <footer>
+    Made by Noah Kornman <br />
+    Based on the Isidore Newman High School grading system
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
