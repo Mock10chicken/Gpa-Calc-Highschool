@@ -1,137 +1,74 @@
-const gradeScale = {
-  "A+": 4.33,
-  "A": 4.00,
-  "A-": 3.67,
-  "B+": 3.33,
-  "B": 3.00,
-  "B-": 2.67,
-  "C+": 2.33,
-  "C": 2.00,
-  "C-": 1.67,
-  "D": 1.00,
-  "F": 0.00
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const startBtn = document.getElementById("startBtn");
+  const numCoursesInput = document.getElementById("numCourses");
+  const coursesContainer = document.getElementById("coursesContainer");
+  const calculateBtn = document.getElementById("calculateBtn");
+  const resultDiv = document.getElementById("result");
 
-function startCourseInput() {
-  const username = document.getElementById("username").value.trim();
-  if (!username) {
-    alert("Please enter your name.");
-    return;
-  }
+  const gradeScale = {
+    "A+": 4.33, "A": 4.0, "A-": 3.67,
+    "B+": 3.33, "B": 3.0, "B-": 2.67,
+    "C+": 2.33, "C": 2.0, "C-": 1.67,
+    "D": 1.0, "F": 0.0
+  };
 
-  localStorage.setItem("username", username);
-  document.getElementById("form-section").classList.add("hidden");
-  document.getElementById("course-count-section").classList.remove("hidden");
+  let username = "";
 
-  // Log visit
-  fetch("https://api.ipify.org?format=json")
-    .then(res => res.json())
-    .then(data => {
-      const ip = data.ip;
-      const browser = navigator.userAgent;
-      const timestamp = new Date().toISOString();
+  startBtn.addEventListener("click", () => {
+    username = document.getElementById("username").value.trim();
+    const numCourses = parseInt(numCoursesInput.value);
+    coursesContainer.innerHTML = "";
 
-      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: username,
-          ip: ip,
-          browser: browser,
-          time: timestamp,
-          type: "visit"
-        }),
-      });
-    });
-}
-
-function generateCourseFields() {
-  const courseCount = parseInt(document.getElementById("courseCount").value);
-  if (isNaN(courseCount) || courseCount < 1) {
-    alert("Please enter a valid number of courses.");
-    return;
-  }
-
-  const form = document.getElementById("courses-form");
-  form.innerHTML = "";
-
-  for (let i = 0; i < courseCount; i++) {
-    form.innerHTML += `
-      <div>
-        <label>Course ${i + 1} Name:</label>
-        <input type="text" name="course${i}" required />
-
-        <label>Credits:</label>
-        <select name="credits${i}">
-          <option value="1">1</option>
-          <option value="0.5">0.5</option>
+    for (let i = 0; i < numCourses; i++) {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <input type="text" placeholder="Course Name">
+        <select class="credits">
           <option value="2">2</option>
+          <option value="4">4</option>
         </select>
-
-        <label>Grade:</label>
-        <select name="grade${i}">
+        <select class="grade">
           ${Object.keys(gradeScale).map(g => `<option value="${g}">${g}</option>`).join("")}
         </select>
-      </div>
-    `;
-  }
+      `;
+      coursesContainer.appendChild(div);
+    }
 
-  form.innerHTML += `<button type="button" onclick="calculateGPA(${courseCount})">Calculate GPA</button>`;
-  form.classList.remove("hidden");
-}
+    calculateBtn.style.display = "block";
+  });
 
-function calculateGPA(courseCount) {
-  let totalPoints = 0;
-  let totalCredits = 0;
+  calculateBtn.addEventListener("click", () => {
+    const creditEls = document.querySelectorAll(".credits");
+    const gradeEls = document.querySelectorAll(".grade");
 
-  for (let i = 0; i < courseCount; i++) {
-    const credits = parseFloat(document.querySelector(`[name="credits${i}"]`).value);
-    const grade = document.querySelector(`[name="grade${i}"]`).value;
-    const points = gradeScale[grade];
+    let totalPoints = 0;
+    let totalCredits = 0;
 
-    totalPoints += credits * points;
-    totalCredits += credits;
-  }
-
-  const gpa = (totalPoints / totalCredits).toFixed(2);
-  const resultDiv = document.getElementById("result");
-  resultDiv.innerHTML = `Your GPA is <strong>${gpa}</strong>`;
-
-  if (gpa >= 3.75) {
-    resultDiv.innerHTML += `<br><span style="color: gold; font-weight: bold;">You made Honor Roll!</span>`;
-  }
-
-  resultDiv.classList.remove("hidden");
-
-  // Log GPA result
-  const username = localStorage.getItem("username");
-  const timestamp = new Date().toISOString();
-
-  fetch("https://api.ipify.org?format=json")
-    .then(res => res.json())
-    .then(data => {
-      const ip = data.ip;
-      const browser = navigator.userAgent;
-
-      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: username,
-          gpa: gpa,
-          ip: ip,
-          browser: browser,
-          time: timestamp,
-          type: "result"
-        }),
-      });
+    creditEls.forEach((creditEl, index) => {
+      const credits = parseFloat(creditEl.value);
+      const grade = gradeEls[index].value;
+      totalPoints += gradeScale[grade] * credits;
+      totalCredits += credits;
     });
-}
 
+    const gpa = (totalPoints / totalCredits).toFixed(2);
+    const honorRoll = gpa >= 3.75;
 
+    resultDiv.innerHTML = `<p>Your GPA is <strong>${gpa}</strong></p>` +
+      (honorRoll ? `<p>🎉 Congratulations! You made the Honor Roll! 🎉</p>` : "");
+
+    // Log to Google Sheets
+    fetch("https://script.google.com/macros/s/AKfycbwxLoUnkibYb7E79xu6jWT-NwmrlAsc5galLYnr5Wrer6uJdHMpgkGG0c-3SWVnC9Vz/exec", {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: username,
+        gpa: gpa,
+        honorRoll: honorRoll,
+        ip: "", // Will be filled in by Google Apps Script if you use e.context.clientIp
+        browser: navigator.userAgent
+      })
+    }).catch(err => console.error("Logging error:", err));
+  });
+});
