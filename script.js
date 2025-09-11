@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (honorRoll ? `<p>🎉 Congratulations! You made the Honor Roll! 🎉</p>` : "");
 
     // Log to Google Sheets
-    fetch("https://script.google.com/macros/s/AKfycbwxLoUnkibYb7E79xu6jWT-NwmrlAsc5galLYnr5Wrer6uJdHMpgkGG0c-3SWVnC9Vz/exec", {
+    fetch(https://script.google.com/macros/s/AKfycbwxLoUnkibYb7E79xu6jWT-NwmrlAsc5galLYnr5Wrer6uJdHMpgkGG0c-3SWVnC9Vz/exec, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
