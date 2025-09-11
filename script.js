@@ -19,17 +19,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const numCourses = parseInt(numCoursesInput.value);
     coursesContainer.innerHTML = "";
 
+    if (!username) {
+      alert("Please enter your name first.");
+      return;
+    }
+    if (!numCourses || numCourses <= 0) {
+      alert("Please enter a valid number of courses.");
+      return;
+    }
+
     for (let i = 0; i < numCourses; i++) {
       const div = document.createElement("div");
+      div.classList.add("course-item");
       div.innerHTML = `
-        <input type="text" placeholder="Course Name">
+        <input type="text" class="course-name" placeholder="Course Name">
         <select class="credits">
-          <option value="2">2</option>
-          <option value="4">4</option>
+          <option value="1">1.0</option>
+          <option value="0.5">0.5</option>
         </select>
         <select class="grade">
           ${Object.keys(gradeScale).map(g => `<option value="${g}">${g}</option>`).join("")}
         </select>
+        <label>
+          <input type="checkbox" class="honors"> Honors/AP
+        </label>
       `;
       coursesContainer.appendChild(div);
     }
@@ -40,15 +53,31 @@ document.addEventListener("DOMContentLoaded", () => {
   calculateBtn.addEventListener("click", () => {
     const creditEls = document.querySelectorAll(".credits");
     const gradeEls = document.querySelectorAll(".grade");
+    const honorsEls = document.querySelectorAll(".honors");
+    const courseNames = document.querySelectorAll(".course-name");
 
     let totalPoints = 0;
     let totalCredits = 0;
+    let courseData = [];
 
     creditEls.forEach((creditEl, index) => {
       const credits = parseFloat(creditEl.value);
-      const grade = gradeEls[index].value;
-      totalPoints += gradeScale[grade] * credits;
+      let gradeValue = gradeScale[gradeEls[index].value];
+
+      // Boost grade by +1.00 if Honors/AP is checked
+      if (honorsEls[index].checked) {
+        gradeValue = Math.min(gradeValue + 1.0, 5.33); // cap at 5.33 (A+ boosted)
+      }
+
+      totalPoints += gradeValue * credits;
       totalCredits += credits;
+
+      courseData.push({
+        name: courseNames[index].value || `Course ${index + 1}`,
+        credits: credits,
+        grade: gradeEls[index].value,
+        honors: honorsEls[index].checked
+      });
     });
 
     const gpa = (totalPoints / totalCredits).toFixed(2);
@@ -57,8 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
     resultDiv.innerHTML = `<p>Your GPA is <strong>${gpa}</strong></p>` +
       (honorRoll ? `<p>🎉 Congratulations! You made the Honor Roll! 🎉</p>` : "");
 
-    // Log to Google Sheets
-    fetch(https://script.google.com/macros/s/AKfycbwxLoUnkibYb7E79xu6jWT-NwmrlAsc5galLYnr5Wrer6uJdHMpgkGG0c-3SWVnC9Vz/exec, {
+    // ✅ Send to Google Sheet
+    fetch("https://script.google.com/macros/s/AKfycbySAjsx7i_ArjvqTFFd3-kZpgXt4s02pclPNQJC4Dz6KDAE9YofWAmJktApjDHXMYAo/exec", {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
@@ -66,8 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
         name: username,
         gpa: gpa,
         honorRoll: honorRoll,
-        ip: "", // Will be filled in by Google Apps Script if you use e.context.clientIp
-        browser: navigator.userAgent
+        browser: navigator.userAgent,
+        courses: courseData
       })
     }).catch(err => console.error("Logging error:", err));
   });
