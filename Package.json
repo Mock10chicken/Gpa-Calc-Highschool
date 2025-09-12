@@ -1,0 +1,16 @@
+{
+  "name": "gpa-calculator",
+  "version": "1.0.0",
+  "description": "GPA Calculator with AI Assistant and Google Sheet Logging",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
+  }
+}
