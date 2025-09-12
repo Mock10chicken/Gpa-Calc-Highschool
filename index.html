@@ -1,29 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GPA Calculator</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>GPA Calculator</h1>
-    <label for="username">Enter Your Name:</label>
-    <input type="text" id="username" placeholder="Your Name">
-    <label for="numCourses">Number of Courses:</label>
-    <input type="number" id="numCourses" min="1" placeholder="Enter number">
-    <button id="startBtn">Start</button>
 
-    <div id="coursesContainer"></div>
-    <button id="calculateBtn" style="display:none;">Calculate GPA</button>
+    <!-- Step 1: Get Name -->
+    <div id="nameSection">
+      <label for="username">Enter Your Name:</label>
+      <input type="text" id="username" placeholder="Your name" />
+      <button id="startBtn">Start</button>
+    </div>
 
+    <!-- Step 2: Get Number of Courses -->
+    <div id="courseCountSection" style="display:none;">
+      <label for="courseCount">Number of Courses:</label>
+      <input type="number" id="courseCount" min="1" />
+      <button id="generateCoursesBtn">Next</button>
+    </div>
+
+    <!-- Step 3: Course Input Form -->
+    <form id="gpaForm" style="display:none;">
+      <div id="coursesContainer"></div>
+      <button type="submit">Calculate GPA</button>
+    </form>
+
+    <!-- Step 4: Show Result -->
     <div id="result"></div>
-  </div>
 
-  <footer>
-    <p>Made by Noah Kornman<br>Based off of Isidore Newman High School grading system</p>
-  </footer>
+    <!-- AI Assistant Section -->
+    <div id="aiAssistant" style="display:none;">
+      <h3>Ask the GPA Assistant</h3>
+      <textarea id="questionInput" placeholder="Ask how to improve your GPA..."></textarea>
+      <button id="askBtn">Ask</button>
+      <div id="aiResponse"></div>
+    </div>
+
+    <footer>
+      Made by Noah Kornman — Based on Isidore Newman High School grading system
+      <br>
+      <a href="https://tawk.to/chat/684898992061f3190a962bb3/1itdp85rf" target="_blank">Support</a>
+    </footer>
+  </div>
 
   <script src="script.js"></script>
 </body>
