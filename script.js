@@ -1,103 +1,109 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.getElementById("startBtn");
-  const numCoursesInput = document.getElementById("numCourses");
-  const coursesContainer = document.getElementById("coursesContainer");
-  const calculateBtn = document.getElementById("calculateBtn");
-  const resultDiv = document.getElementById("result");
+const startBtn = document.getElementById("startBtn");
+const courseCountSection = document.getElementById("courseCountSection");
+const generateCoursesBtn = document.getElementById("generateCoursesBtn");
+const coursesContainer = document.getElementById("coursesContainer");
+const gpaForm = document.getElementById("gpaForm");
+const resultDiv = document.getElementById("result");
+const aiAssistant = document.getElementById("aiAssistant");
 
-  const gradeScale = {
-    "A+": 4.33, "A": 4.0, "A-": 3.67,
-    "B+": 3.33, "B": 3.0, "B-": 2.67,
-    "C+": 2.33, "C": 2.0, "C-": 1.67,
-    "D": 1.0, "F": 0.0
-  };
+let userName = "";
 
-  let username = "";
+// Step 1: Enter Name
+startBtn.addEventListener("click", () => {
+  userName = document.getElementById("username").value.trim();
+  if (!userName) return alert("Please enter your name.");
+  document.getElementById("nameSection").style.display = "none";
+  courseCountSection.style.display = "block";
+});
 
-  startBtn.addEventListener("click", () => {
-    username = document.getElementById("username").value.trim();
-    const numCourses = parseInt(numCoursesInput.value);
-    coursesContainer.innerHTML = "";
+// Step 2: Enter Number of Courses
+generateCoursesBtn.addEventListener("click", () => {
+  const count = parseInt(document.getElementById("courseCount").value);
+  if (isNaN(count) || count <= 0) return alert("Enter a valid number of courses.");
 
-    if (!username) {
-      alert("Please enter your name first.");
-      return;
-    }
-    if (!numCourses || numCourses <= 0) {
-      alert("Please enter a valid number of courses.");
-      return;
-    }
-
-    for (let i = 0; i < numCourses; i++) {
-      const div = document.createElement("div");
-      div.classList.add("course-item");
-      div.innerHTML = `
-        <input type="text" class="course-name" placeholder="Course Name">
+  coursesContainer.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    coursesContainer.innerHTML += `
+      <div class="course">
+        <input type="text" placeholder="Course name" required />
         <select class="credits">
-          <option value="1">1.0</option>
-          <option value="0.5">0.5</option>
+          <option value="1">1 Credit</option>
+          <option value="0.5">0.5 Credit</option>
         </select>
         <select class="grade">
-          ${Object.keys(gradeScale).map(g => `<option value="${g}">${g}</option>`).join("")}
+          <option value="4.33">A+</option>
+          <option value="4.00">A</option>
+          <option value="3.67">A-</option>
+          <option value="3.33">B+</option>
+          <option value="3.00">B</option>
+          <option value="2.67">B-</option>
+          <option value="2.33">C+</option>
+          <option value="2.00">C</option>
+          <option value="1.67">C-</option>
+          <option value="1.00">D</option>
+          <option value="0.00">F</option>
         </select>
-        <label>
-          <input type="checkbox" class="honors"> Honors/AP
-        </label>
-      `;
-      coursesContainer.appendChild(div);
-    }
+        <label><input type="checkbox" class="honors"> Honors/AP</label>
+      </div>
+    `;
+  }
+  courseCountSection.style.display = "none";
+  gpaForm.style.display = "block";
+});
 
-    calculateBtn.style.display = "block";
+// Step 3: Calculate GPA
+gpaForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  let totalPoints = 0, totalCredits = 0;
+  const courseDivs = document.querySelectorAll(".course");
+
+  courseDivs.forEach(course => {
+    const credits = parseFloat(course.querySelector(".credits").value);
+    let gradePoints = parseFloat(course.querySelector(".grade").value);
+    if (course.querySelector(".honors").checked) gradePoints += 1.0;
+    totalPoints += gradePoints * credits;
+    totalCredits += credits;
   });
 
-  calculateBtn.addEventListener("click", () => {
-    const creditEls = document.querySelectorAll(".credits");
-    const gradeEls = document.querySelectorAll(".grade");
-    const honorsEls = document.querySelectorAll(".honors");
-    const courseNames = document.querySelectorAll(".course-name");
+  const gpa = (totalPoints / totalCredits).toFixed(2);
+  resultDiv.innerHTML = `<strong>Your GPA: ${gpa}</strong><br>${gpa >= 3.75 ? "🎉 You made Honor Roll!" : ""}`;
+  aiAssistant.style.display = "block";
 
-    let totalPoints = 0;
-    let totalCredits = 0;
-    let courseData = [];
-
-    creditEls.forEach((creditEl, index) => {
-      const credits = parseFloat(creditEl.value);
-      let gradeValue = gradeScale[gradeEls[index].value];
-
-      // Boost grade by +1.00 if Honors/AP is checked
-      if (honorsEls[index].checked) {
-        gradeValue = Math.min(gradeValue + 1.0, 5.33); // cap at 5.33 (A+ boosted)
-      }
-
-      totalPoints += gradeValue * credits;
-      totalCredits += credits;
-
-      courseData.push({
-        name: courseNames[index].value || `Course ${index + 1}`,
-        credits: credits,
-        grade: gradeEls[index].value,
-        honors: honorsEls[index].checked
-      });
-    });
-
-    const gpa = (totalPoints / totalCredits).toFixed(2);
-    const honorRoll = gpa >= 3.75;
-
-    resultDiv.innerHTML = `<p>Your GPA is <strong>${gpa}</strong></p>` +
-      (honorRoll ? `<p>🎉 Congratulations! You made the Honor Roll! 🎉</p>` : "");
-
-    // ✅ Send to Google Sheet
-    fetch("https://script.google.com/macros/s/AKfycbySAjsx7i_ArjvqTFFd3-kZpgXt4s02pclPNQJC4Dz6KDAE9YofWAmJktApjDHXMYAo/exec", {
+  // Log to Google Sheet
+  try {
+    await fetch("https://script.google.com/macros/s/AKfycbySAjsx7i_ArjvqTFFd3-kZpgXt4s02pclPNQJC4Dz6KDAE9YofWAmJktApjDHXMYAo/exec", {
       method: "POST",
-      mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: username,
-        gpa: gpa,
-        honorRoll: honorRoll,
+        name: userName,
+        gpa,
         browser: navigator.userAgent,
-        courses: courseData
+        ip: "Logged by Google Script"
       })
-    }).catch(err => console.error("Logging error:", err));
-  });
+    });
+  } catch (err) {
+    console.error("Logging failed:", err);
+  }
+});
+
+// Step 4: AI Assistant
+document.getElementById("askBtn").addEventListener("click", async () => {
+  const question = document.getElementById("questionInput").value;
+  if (!question) return alert("Please ask a question.");
+
+  document.getElementById("aiResponse").innerText = "Thinking...";
+
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gpa: document.querySelector("#result strong").innerText, question })
+    });
+    const data = await response.json();
+    document.getElementById("aiResponse").innerText = data.answer;
+  } catch (err) {
+    document.getElementById("aiResponse").innerText = "Error contacting AI assistant.";
+    console.error(err);
+  }
 });
