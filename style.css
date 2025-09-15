@@ -1,6 +1,6 @@
 body {
   background-color: #4b5320; /* Army green */
-  color: #fff;
+  color: white;
   font-family: Arial, sans-serif;
   text-align: center;
   margin: 0;
@@ -9,39 +9,26 @@ body {
 
 .container {
   max-width: 600px;
-  margin: auto;
+  margin: 20px auto;
+  background: #333;
   padding: 20px;
-}
-
-input, select, textarea {
-  margin: 8px;
-  padding: 8px;
-  border-radius: 5px;
-  border: none;
+  border-radius: 10px;
 }
 
 button {
   background-color: orange;
   color: black;
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 10px 20px;
+  margin-top: 10px;
   cursor: pointer;
-  font-weight: bold;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-#result {
-  margin-top: 20px;
-  font-size: 1.2em;
+  border-radius: 5px;
 }
 
 footer {
   position: fixed;
-  bottom: 5px;
-  left: 5px;
-  font-size: 0.8em;
+  bottom: 10px;
+  left: 10px;
+  font-size: 12px;
+  color: lightgray;
 }
